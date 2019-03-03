@@ -7,8 +7,6 @@ import { getGasPrice } from '../eth/gasPrice';
 import Token from './Token.js';
 import Mint from './Mint';
 
-// TODO: Include note on dev.period in dev nodes subchapter
-
 class ERC721 extends Component {
   constructor(props) {
     super(props);
@@ -19,33 +17,6 @@ class ERC721 extends Component {
 
     this.mint = this.mint.bind(this);
     this.canMint = this.canMint.bind(this);
-  }
-
-  async heavyLoadTokens() {
-    const currentBlock = await getBlockNumber();
-    const olderBlock = Math.max(currentBlock - 6, 0);
-    
-    const [pendingTokens, currentTokens, confirmedTokens] = 
-      await Promise.all([
-        this.getTokensAtBlock(null),
-        this.getTokensAtBlock(currentBlock),
-        this.getTokensAtBlock(olderBlock)
-      ]);
-    
-    const tokens = pendingTokens.map(id => {
-      const latestBlock = currentTokens.includes(id) ? currentBlock : null;
-      const oldestBlock = confirmedTokens.includes(id) ? olderBlock : latestBlock;
-      return { id, latestBlock, oldestBlock };
-    });
-
-    this.setState({ tokens, loading: false });
-  }
-
-  async loadTokens() {
-    const currentBlock = await getBlockNumber();
-    const tokenIds = await this.getTokensAtBlock(currentBlock);
-    const tokens = tokenIds.map(id => ({ id, confirmed: true }));
-    this.setState({ tokens, loading: false });
   }
 
   async getTokensAtBlock(blockNumber) {
@@ -65,10 +36,8 @@ class ERC721 extends Component {
   async mint(id) {
     const { contract, owner } = this.props;
     const from = owner;
-    const value = (new BigNumber(id)).shiftedBy(12).toString(10);
-    console.log("VALUE", value);
+    const value = new BigNumber(id).shiftedBy(12).toString(10);
     const gas = await contract.methods.mint(owner, id).estimateGas({ value, from });
-    console.log("GAS", gas)
     const gasPrice = await getGasPrice();
 
     contract.methods.mint(owner, id).send({ value, gas, gasPrice, from })
@@ -87,7 +56,6 @@ class ERC721 extends Component {
   }
 
   addToken(id) {
-    console.log("ADDING TOKEN", id)
     this.setState(state => ({
       ...state,
       tokens: [ ...state.tokens, { id }]
@@ -113,7 +81,10 @@ class ERC721 extends Component {
   }
 
   async componentDidMount() {
-    this.loadTokens();
+    const currentBlock = await getBlockNumber();
+    const tokenIds = await this.getTokensAtBlock(currentBlock);
+    const tokens = tokenIds.map(id => ({ id, existing: true }));
+    this.setState({ tokens, loading: false });
   }
 
   render() {

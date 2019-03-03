@@ -23,3 +23,12 @@
   padding: 0.5em;
   border-radius: 3px;
 }
+
+.ERC721-token-id {
+  display: inline-block;
+  margin: 5px;
+}
+
+.ERC721-token-status {
+  font-size: 50%;
+}

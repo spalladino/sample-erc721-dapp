@@ -1,13 +1,27 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 export default function({ token }) {
-  const { id, confirmed, confirmations, error } = token;
+  const { id, existing, confirmations } = token;
+  const pending = typeof(confirmations) === "undefined";
+  const confirmed = confirmations >= 6;
+
+  console.log("Confirmations", confirmations, "pending", pending)
+  
+  let status;
+  if (existing) {
+    status = "";
+  } else if (pending) {
+    status = "Pending";
+  } else if (confirmed) {
+    status = "Confirmed";
+  } else {
+    status = "Unconfirmed";
+  }
+
   return (
     <div>
-      <h3>{ id.toString() }</h3>
-      <div>Confirmations: {confirmations}</div>
-      <div>Confirmed: {confirmed ? "Yes" : "No"}</div>
-      <div>Error: {error}</div>
+      <div className="ERC721-token-id">{ id.toString() }</div>
+      <span className="ERC721-token-status">{status}</span>
     </div>
   );
 }
